@@ -139,6 +139,7 @@ plt.savefig("benchmark_summary_visualization.png", dpi=300, bbox_inches="tight")
    ```
 2. **PyArrow `__index_level_0__` 컬럼 오류 방어**:
    - `pa.Table.from_pandas(sub_df, preserve_index=False)` 및 `sub_df.reset_index(drop=True)` 지정.
+3. **BigQuery Connection 생성**: `google.cloud.bigquery_connection_v1` SDK를 사용하여 Cloud Resource Connection을 파이썬 스크립트 내에서 자동 생성하고 SA Email 추출 후 GCS Storage Admin/Viewer IAM 권한을 자동 바인딩함.
 3. **BigQuery External DDL 문법 규격**:
    - 미지원 옵션인 `metadata_cache_mode = 'AUTOMATIC'` 제거 및 `format = 'ICEBERG'` 규격 적용.
 4. **Managed vs External Iceberg `Slot Millis` 대 `Elapsed Time` 트레이드오프**:
