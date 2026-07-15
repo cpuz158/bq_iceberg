@@ -28,7 +28,7 @@
 
 1. **`native_weblog`**: BigQuery Native Table (`PARTITION BY event_date CLUSTER BY user_id, event_type`)
 2. **`managed_iceberg_weblog`**: BigQuery Managed Iceberg Table (BQ 스토리지/메타데이터 자동 관리)
-3. **`external_iceberg_weblog`**: LakeHouse External Iceberg Table (`PyIceberg` & GCS Open Storage)
+3. **`external_iceberg_weblog`**: Lakehouse External Iceberg Table (`PyIceberg` & GCS Open Storage)
 4. **`metastore_iceberg_weblog`**: BigQuery Metastore Iceberg Table (`PySpark` / Metastore API)
 
 ---
