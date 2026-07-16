@@ -50,9 +50,9 @@
 
 ### 2.1 4대 아키텍처 비교표
 
-| 항목 | Native Table (Capacitor) | BigQuery Managed Iceberg | Lakehouse External Iceberg | BigQuery Metastore Iceberg |
+| 항목 | Native Table (Capacitor) | BigQuery Managed Iceberg | LakeHouse External Iceberg | BigQuery Metastore Iceberg |
 | :--- | :--- | :--- | :--- | :--- |
-| **카탈로그 주체** | Internal BQ Catalog | Internal BQ Catalog | Lakehouse REST Catalog (`https://biglake.googleapis.com/iceberg/v1/restcatalog`) | BigQueryMetastoreCatalog (`org.apache.iceberg.gcp.bigquery.BigQueryMetastoreCatalog`) |
+| **카탈로그 주체** | Internal BQ Catalog | Internal BQ Catalog | GCS 기반 Static Metadata File | BigQuery/LakeHouse Metastore API |
 | **Partition Pruning** | 최상 (Internal BQ Metadata) | 최상 (Manifest List Skip) | 최상 (PartitionSpec `event_date` Skip) | 최상 (PartitionSpec `event_date` Skip) |
 | **Predicate Pushdown** | 최상 (Capacitor Zone Maps) | 우수 (Iceberg lower/upper) | 우수 (Iceberg lower/upper) | 우수 (Iceberg lower/upper) |
 | **Metadata Pruning** | Internal Zero-latency | 2-tier Internal Cache | GCS HTTP File Read Latency | Metastore API Sync |

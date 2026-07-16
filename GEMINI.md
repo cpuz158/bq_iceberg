@@ -48,8 +48,8 @@
 ### 2.1 4대 벤치마킹 대상 테이블
 1. **`native_weblog`**: BigQuery Native Table (Capacitor 포맷)
 2. **`managed_iceberg_weblog`**: BigQuery Managed Iceberg Table (스토리지 & 메타데이터 자동 관리)
-3. **`external_iceberg_weblog`**: Lakehouse External Iceberg Table (Lakehouse REST Catalog `https://biglake.googleapis.com/iceberg/v1/restcatalog` & PyIceberg)
-4. **`metastore_iceberg_weblog`**: BigQuery Metastore Iceberg Table (`org.apache.iceberg.gcp.bigquery.BigQueryMetastoreCatalog` & `gs://spark-lib/bigquery/iceberg-bigquery-catalog-1.9.1-1.0.1.jar`)
+3. **`external_iceberg_weblog`**: LakeHouse External Iceberg Table (PyIceberg & GCS 오픈 스토리지)
+4. **`metastore_iceberg_weblog`**: BigQuery Metastore Iceberg Table (PySpark / Metastore API)
 
 ### 2.2 대용량 데이터 동기화 및 적재 규칙 (Data Scaling Rules)
 - **정확히 150,000,000건 (1.5억 건, ~50GB)** 데이터 세트를 4대 테이블 전체에 일치시킬 것.
@@ -139,7 +139,6 @@ plt.savefig("benchmark_summary_visualization.png", dpi=300, bbox_inches="tight")
    ```
 2. **PyArrow `__index_level_0__` 컬럼 오류 방어**:
    - `pa.Table.from_pandas(sub_df, preserve_index=False)` 및 `sub_df.reset_index(drop=True)` 지정.
-3. **BigQuery Connection 및 Lakehouse Catalog 생성**: `google.cloud.bigquery_connection_v1` SDK를 사용하여 Cloud Resource Connection을 파이썬 스크립트 내에서 자동 생성하고 `gcloud biglake catalogs create`로 Lakehouse Catalog 자원을 사전 확정함.
 3. **BigQuery External DDL 문법 규격**:
    - 미지원 옵션인 `metadata_cache_mode = 'AUTOMATIC'` 제거 및 `format = 'ICEBERG'` 규격 적용.
 4. **Managed vs External Iceberg `Slot Millis` 대 `Elapsed Time` 트레이드오프**:
