@@ -37,7 +37,8 @@
      ```
 3. **산출물 파일 배치 제약**:
    - 모든 산출물은 프로젝트 루트(`./`) 경로에 위치해야 함.
-   - 메인 노트북: `bq_iceberg_deepdive.ipynb`
+   - 1GB 전용 가벼운 실증 노트북: `bq_lakehouse_catalog_demo.ipynb`
+   - 메인 대용량 노트북: `bq_iceberg_deepdive.ipynb`
    - 심층 분석 전용 노트북: `bq_iceberg_analysis.ipynb`
    - 종합 기술 보고서: `bq_iceberg_deepdive_report.md`
 
