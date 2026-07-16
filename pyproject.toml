@@ -3,7 +3,7 @@ name = "bq-iceberg"
 version = "0.1.0"
 description = "BigQuery & Apache Iceberg Deepdive and Automated Benchmark"
 readme = "bq_iceberg_deepdive_report.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "google-cloud-bigquery>=3.42.0",
     "google-cloud-storage>=3.13.0",
@@ -16,5 +16,5 @@ dependencies = [
     "ipykernel>=7.0.0",
     "pyiceberg[gcsfs]>=0.11.0",
     "sqlalchemy>=2.0.0",
-    "pyspark>=4.2.0",
+    "pyspark>=3.5.0,<4.0.0",
 ]
