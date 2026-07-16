@@ -48,7 +48,7 @@
 ### 2.1 4대 벤치마킹 대상 테이블
 1. **`native_weblog`**: BigQuery Native Table (Capacitor 포맷)
 2. **`managed_iceberg_weblog`**: BigQuery Managed Iceberg Table (스토리지 & 메타데이터 자동 관리)
-3. **`external_iceberg_weblog`**: Lakehouse External Iceberg Table (REST Catalog `bl://projects/PROJECT_ID/catalogs/CATALOG_ID` 및 PyIceberg)
+3. **`external_iceberg_weblog`**: Lakehouse External Iceberg Table (Lakehouse Runtime Catalog `bl://projects/PROJECT_ID/catalogs/lakehouse_runtime_catalog` & PyIceberg)
 4. **`metastore_iceberg_weblog`**: BigQuery Metastore Iceberg Table (`org.apache.iceberg.gcp.bigquery.BigQueryMetastoreCatalog` & `gs://spark-lib/bigquery/iceberg-bigquery-catalog-1.9.1-1.0.1.jar`)
 
 ### 2.2 대용량 데이터 동기화 및 적재 규칙 (Data Scaling Rules)
