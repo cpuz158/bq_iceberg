@@ -1,23 +1,23 @@
-# BigQuery & Apache Iceberg 엔터프라이즈 성능 벤치마크 가이드라인 (`GEMINI.md`)
+# BigQuery & Apache Iceberg 엔터프라이즈 성능 벤치마크 에이전트 가이드라인 (`GEMINI.md`)
 
 ## 🤖 에이전트 역할 및 미션 (Role & Mission)
 > **너는 고도의 자율성을 가진 소프트웨어 엔지니어 에이전트이다.**
-> **BigQuery와 Apache Iceberg 연동 및 성능 최적화에 대한 코드 레벨 분석과 초기 환경 구축부터 벤치마킹까지 완전 자동화된 주피터 노트북(Jupyter Notebook)을 설계하라.**
->
-> 본 지침서만으로도 50GB (1.5억 건) 규모의 BigQuery Native 및 Apache Iceberg (Managed, External, Metastore) 벤치마킹 파이프라인과 주피터 노트북 코드를 100% 재현 및 생성할 수 있도록 명확한 코드 레벨 표준을 정의한다.
+> **BigQuery Native Table 및 Apache Iceberg 3종 아키텍처 연동부터 동적 용량 조절(`TARGET_GB`), 무결성 검증, 벤치마킹 쿼리 실행, 4개 차원 시각화, 파일 레이아웃 심층 분석까지 완전 자동화된 주피터 노트북(`bq_iceberg_benchmark_50gb.ipynb`)을 100% 재현 및 생성할 수 있는 코드 레벨 프롬프트를 준수하라.**
 
 ---
 
 ## 🎯 1. 기본 인프라 & 환경 설정 규칙 (Environment Rules)
 
-1. **프로젝트 & 데이터셋 규격**:
-   - GCP Project ID: `your-gcp-project-id`
+1. **GCP 리소스 규격**:
+   - GCP Project ID: `USER_PROJECT_ID` (자동 감지 또는 사용자가 입력한 GCP Project ID)
    - BigQuery Dataset Location: `asia-northeast3` (서울 리전)
+   - BigQuery Dataset Name: `bq_iceberg_benchmark_ds`
    - Connection Name: `lakehouse-iceberg-conn`
+   - GCS Bucket Name: `{PROJECT_ID}-bq-iceberg-demo-bucket`
 2. **패키지 및 런타임 호환 규격**:
    - `pyspark>=4.2.0` (PySpark 최신버전 준수)
    - `pyiceberg[gcsfs]>=0.11.0` (GCS 오픈 메타데이터 엔진)
-   - JDK 17+/26+ 호환성을 위한 JVM 모듈 개방 플래그 주입 필수:
+   - JDK 17+/26+ 호환성을 위한 JVM 모듈 개방 플래그 필수 주입:
      ```python
      import os
      os.environ["JDK_JAVA_OPTIONS"] = (
@@ -35,113 +35,69 @@
          "--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED"
      )
      ```
-3. **산출물 파일 배치 제약**:
-   - 모든 산출물은 프로젝트 루트(`./`) 경로에 위치해야 함.
-   - 1GB 전용 가벼운 실증 노트북: `bq_lakehouse_catalog_demo.ipynb`
-   - 메인 대용량 노트북: `bq_iceberg_deepdive.ipynb`
-   - 심층 분석 전용 노트북: `bq_iceberg_analysis.ipynb`
-   - 종합 기술 보고서: `bq_iceberg_deepdive_report.md`
+3. **노트북 산출물 명세**:
+   - 메인 대용량 가변 스케일 벤치마크 노트북: `bq_iceberg_benchmark_50gb.ipynb`
 
 ---
 
-## 📊 2. 4대 비교 테이블 & 데이터 적재 파이프라인 규격
+## 💡 2. 동적 용량 조절 변수 (`TARGET_GB`) 및 시드 데이터 확장 규격
 
-### 2.1 4대 벤치마킹 대상 테이블
-1. **`native_weblog`**: BigQuery Native Table (Capacitor 포맷)
-2. **`managed_iceberg_weblog`**: BigQuery Managed Iceberg Table (스토리지 & 메타데이터 자동 관리)
-3. **`external_iceberg_weblog`**: LakeHouse External Iceberg Table (PyIceberg & GCS 오픈 스토리지)
-4. **`metastore_iceberg_weblog`**: BigQuery Metastore Iceberg Table (PySpark / Metastore API)
-
-### 2.2 대용량 데이터 동기화 및 적재 규칙 (Data Scaling Rules)
-- **정확히 150,000,000건 (1.5억 건, ~50GB)** 데이터 세트를 4대 테이블 전체에 일치시킬 것.
-- **실시간 SQL 검증**: External Table REST API 메타데이터 (`num_rows`)가 0을 반환하므로, 실시간 SQL **`SELECT COUNT(*)`** 쿼리 실행 결과로 150,000,000 건을 검증할 것.
-- **PyIceberg Fast Bulk Append 패턴**:
-  - DML 제한 (`400 DML statements are only supported over tables stored in BigQuery`) 회피를 위해 PyIceberg Fast Append API 사용.
-  - 1,000,000건 시드 데이터프레임을 150배 확장하여 날짜별 1,500만 건 단위로 단 10회의 Bulk Append로 수십 초 만에 적재 완료.
-
----
-
-## ⚡ 3. 파티셔닝 & 클러스터 정렬 레이아웃 코드 레벨 규격
-
-### 3.1 Partition Pruning (`event_date` 파티셔닝)
-- **PyIceberg `PartitionSpec` 적용**:
+- **사용자 데이터 용량 설정 변수**:
   ```python
-  from pyiceberg.partitioning import PartitionSpec, PartitionField
-  from pyiceberg.transforms import IdentityTransform
-
-  partition_spec = PartitionSpec(
-      PartitionField(source_id=3, field_id=1000, transform=IdentityTransform(), name="event_date")
-  )
+  TARGET_GB = 50  # 사용자가 1GB, 10GB, 50GB 등 자유롭게 지정
+  ROWS_PER_GB = 3_000_000  # 7개 컬럼 스키마 기준 1GB당 약 300만 건
+  TARGET_ROWS = TARGET_GB * ROWS_PER_GB
+  SEED_ROWS = 1_000_000  # 시드 더미 데이터 (100만 건)
+  MULTIPLIER = max(1, TARGET_ROWS // SEED_ROWS)  # 시드 데이터 확장 배율
   ```
-- **GCS 스토리지 경로**: `data/event_date=YYYY-MM-DD/` 구조로 명시적 분할 적재.
-
-### 3.2 Predicate Pushdown & Clustering (클러스터 정렬 구현)
-- **BigQuery `CLUSTER BY` 와 100% 동일한 효과 구현**:
-  ```python
-  # 1. Iceberg Table Property 부여
-  iceberg_table = catalog.create_table(
-      identifier="default.external_weblog",
-      schema=schema,
-      partition_spec=partition_spec,
-      properties={"write.sort.order": "user_id ASC NULLS FIRST, event_type ASC NULLS FIRST"}
-  )
-
-  # 2. PyArrow 적재 시 user_id, event_type 물리 정렬 및 Index 차단
-  sorted_sub_df = sub_df.sort_values(by=['user_id', 'event_type']).reset_index(drop=True)
-  pa_sub_table = pa.Table.from_pandas(sorted_sub_df, preserve_index=False)
-  iceberg_table.append(pa_sub_table)
-  ```
-- **효과**: Parquet Row Group Column Statistics (`lower_bounds`, `upper_bounds`)의 min/max 범위가 조밀해져 **BigQuery Row-Group Level Skipping (99.9% 스킵)** 발동.
+- **시드 데이터 업로드**:
+  - 100만 건 시드 파키 파일(`raw_data/chunk_*.parquet`)을 GCS 버킷에 먼저 업로드 후 Native Table 적재 시 `CROSS JOIN UNNEST(GENERATE_ARRAY(1, MULTIPLIER))` 로 목표 용량 병렬 확장.
 
 ---
 
-## 📈 4. 5단계 시각화 코드 표준 (Visualization Code Standard)
+## 📊 3. 4대 비교 대상 테이블 1:1 독립 셀 구축 규격
 
-벤치마킹 결과 시각화 시 **4가지 핵심 다차원 지표**를 4개 서브플롯(Subplots)으로 시각화하고 DPI 300 고해상도 차트로 저장:
+노트북 3단계에서는 아래 4개 비교 대상 테이블을 **독립된 개별 전용 코드 셀**로 명확히 분리하여 생성한다:
 
-```python
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-sns.set_theme(style="whitegrid")
-fig, axes = plt.subplots(4, 1, figsize=(14, 24))
-
-# 1. Bytes Processed (MB)
-sns.barplot(data=df_bench, x="bytes_processed_mb", y="scenario", hue="table_type", ax=axes[0], palette="viridis")
-axes[0].set_title("1. Bytes Processed (Data Scan Size in MB) - Lower is Better", fontsize=14, fontweight="bold")
-
-# 2. Elapsed Time (Seconds)
-sns.barplot(data=df_bench, x="elapsed_time_sec", y="scenario", hue="table_type", ax=axes[1], palette="rocket")
-axes[1].set_title("2. Elapsed Wall-Clock Time (Execution Time in Seconds) - Lower is Better", fontsize=14, fontweight="bold")
-
-# 3. Slot Millis (ms)
-sns.barplot(data=df_bench, x="slot_millis", y="scenario", hue="table_type", ax=axes[2], palette="magma")
-axes[2].set_title("3. Slot Millis (CPU Compute Consumption in ms) - Lower is Better", fontsize=14, fontweight="bold")
-
-# 4. Estimated Query Cost ($ USD)
-sns.barplot(data=df_bench, x="query_cost_usd", y="scenario", hue="table_type", ax=axes[3], palette="crest")
-axes[3].set_title("4. Estimated Query Cost ($ USD @ $6.25/TB On-Demand) - Lower is Better", fontsize=14, fontweight="bold")
-
-plt.tight_layout()
-plt.savefig("benchmark_summary_visualization.png", dpi=300, bbox_inches="tight")
-```
+1. **`[3-2단계] Native Table (Capacitor)`**:
+   - Table ID: `f"{PROJECT_ID}.{DATASET_NAME}.native_weblog"`
+   - `PARTITION BY event_date`, `CLUSTER BY user_id, event_type`
+2. **`[3-3단계] BQ Managed Iceberg Table`**:
+   - Table ID: `f"{PROJECT_ID}.{DATASET_NAME}.managed_iceberg_weblog"`
+   - `OPTIONS (file_format = 'PARQUET', table_format = 'ICEBERG')`
+3. **`[3-4단계] Lakehouse Iceberg Table` (핵심 카탈로그 연동)**:
+   - Table ID: `f"{PROJECT_ID}.{BUCKET_NAME}.default.external_weblog"`
+   - GCP BigLake REST Catalog (`https://biglake.googleapis.com/iceberg/v1/restcatalog`) 연동
+   - PyIceberg Fast Bulk Append API로 적재 (`write.sort.order = "user_id ASC NULLS FIRST, event_type ASC NULLS FIRST"`)
+4. **`[3-5단계] External Iceberg Table` (정적 DDL 연동)**:
+   - Table ID: `f"{PROJECT_ID}.{DATASET_NAME}.external_iceberg_weblog"`
+   - `CREATE OR REPLACE EXTERNAL TABLE` DDL 및 GCS `metadata.json` URI 연결
 
 ---
 
-## 🛠️ 5. 주요 트러블슈팅 및 예방 방어 코드 (Defenses)
+## 📊 4. 데이터 무결성 검증 및 벤치마크 쿼리 시나리오 규격
 
-1. **GCS 버킷/폴더 수동 삭제 시 SQLite 404 NOT_FOUND 캐시 에러 방어**:
-   ```python
-   if os.path.exists("/tmp/pyiceberg_catalog.db"):
-       try:
-           os.remove("/tmp/pyiceberg_catalog.db")
-       except Exception:
-           pass
-   ```
-2. **PyArrow `__index_level_0__` 컬럼 오류 방어**:
-   - `pa.Table.from_pandas(sub_df, preserve_index=False)` 및 `sub_df.reset_index(drop=True)` 지정.
-3. **BigQuery External DDL 문법 규격**:
-   - 미지원 옵션인 `metadata_cache_mode = 'AUTOMATIC'` 제거 및 `format = 'ICEBERG'` 규격 적용.
-4. **Managed vs External Iceberg `Slot Millis` 대 `Elapsed Time` 트레이드오프**:
-   - BQ Managed Iceberg: High Parallelism 슬롯 동원으로 Slot Millis(62,080 ms)는 높으나 Elapsed Time(1.18초) 단축.
-   - BigLake External Iceberg: 슬롯 동원 제약으로 Slot Millis(35,923 ms)는 적으나 Elapsed Time(1.78초) 소요.
+### 4.1 실시간 SQL 무결성 검증 (4단계)
+- 외부 REST Table metadata 0 반환 문제를 회피하기 위해, 4개 테이블 구축 완료 후 실시간 SQL **`SELECT COUNT(*)`** 쿼리를 실행하여 `TARGET_ROWS`와의 일치 여부를 pandas DataFrame 표로 검증.
+
+### 4.2 3대 핵심 벤치마크 시나리오 (5단계)
+- **쿼리 캐시 완전 비활성화**: `job_config = bigquery.QueryJobConfig(use_query_cache=False)`
+- **시나리오 1: Partition Pruning** (`WHERE event_date BETWEEN '2026-07-03' AND '2026-07-05'`)
+- **시나리오 2: Predicate Pushdown** (`WHERE user_id = 'USER_10500' AND event_type = 'PURCHASE'`)
+- **시나리오 3: Full Scan Aggregation** (`GROUP BY device_os, event_type`)
+
+### 4.3 4개 지표 고해상도 시각화 (6단계)
+- `Bytes Processed (MB)`, `Elapsed Time (sec)`, `Slot Milliseconds (ms)`, `Estimated Query Cost ($ USD @ $6.25/TB)` 4개 서브플롯을 Seaborn으로 작성하고 DPI 300 차트(`benchmark_summary_visualization.png`)로 저장.
+
+---
+
+## 📌 5. 심층 분석 & 파일 레이아웃 Best Practice 요약 규격 (7단계)
+
+노트북 최하단 마크다운 셀에는 다음 내용이 포함되어야 한다:
+1. **BigQuery Native Capacitor vs Apache Iceberg Parquet 읽기 메커니즘 차이** (Direct Vectorized Read vs Parquet Footer Decoding).
+2. **Parquet File Size 최적 권장값**: **256MB** (128MB ~ 512MB 범위).
+3. **Row Group Size 최적 권장값**: **64MB ~ 128MB**.
+4. **Small Files & Manifest 관리**: `write.manifest.target-size-bytes = 8MB`, Snapshot Expire 설정.
+5. **Compaction 자동화 트리거 기준**: 소형 파일(<32MB) 수량 1,000개 이상 초과 시 또는 MoR Delete 파일 비율 > 15% 시 Spark `rewrite_data_files` 실행.
+6. **Column Pruning & Row-Group Skipping (99.9% 스킵)**: `write.sort.order` 지정 및 PyArrow 물리 정렬 적재로 min/max 범위 수축.
+7. **엔터프라이즈 Best Practice 요약 매트릭스 표**.
