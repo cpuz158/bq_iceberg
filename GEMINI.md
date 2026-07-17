@@ -15,7 +15,7 @@
    - Connection Name: `lakehouse-iceberg-conn`
    - GCS Bucket Name: `{PROJECT_ID}-bq-iceberg-demo-bucket`
 2. **패키지 및 런타임 호환 규격**:
-   - `pyspark>=4.2.0` (PySpark 최신버전 준수)
+   - `pyspark>=3.5.0,<4.0.0` (Apache Iceberg Spark 3.5 Runtime 호환 버전 준수)
    - `pyiceberg[gcsfs]>=0.11.0` (GCS 오픈 메타데이터 엔진)
    - JDK 17+/26+ 호환성을 위한 JVM 모듈 개방 플래그 필수 주입:
      ```python

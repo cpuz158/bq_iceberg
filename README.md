@@ -2,7 +2,7 @@
 
 [![BigQuery](https://img.shields.io/badge/Google_Cloud-BigQuery-4285F4?style=flat-square&logo=googlecloud)](https://cloud.google.com/bigquery)
 [![Apache Iceberg](https://img.shields.io/badge/Apache-Iceberg-blue?style=flat-square&logo=apache)](https://iceberg.apache.org/)
-[![PySpark](https://img.shields.io/badge/PySpark-4.2.0-E25A1C?style=flat-square&logo=apachespark)](https://spark.apache.org/)
+[![PySpark](https://img.shields.io/badge/PySpark-3.5.8-E25A1C?style=flat-square&logo=apachespark)](https://spark.apache.org/)
 [![PyIceberg](https://img.shields.io/badge/PyIceberg-0.11.0-8CA1AF?style=flat-square)](https://pyiceberg.databend.rs/)
 
 본 저장소는 **BigQuery Native Table (Capacitor)**, **BigQuery Managed Iceberg Table**, **Lakehouse Iceberg Table**, **External Iceberg Table** 4대 데이터 레이크하우스 아키텍처를 기반으로 한 가변 데이터 용량(1GB ~ 50GB+, 최대 1.5억 건) 벤치마크 및 심층 파일 레이아웃 분석 자동화 프로젝트입니다.
@@ -145,4 +145,4 @@ jupyter lab bq_iceberg_benchmark_50gb.ipynb
 ## 📝 라이선스 & 실행 환경
 - **GCP Region**: `asia-northeast3` (서울 리전)
 - **BigQuery Connection**: `lakehouse-iceberg-conn`
-- **Engine**: PySpark 4.2.0, PyIceberg 0.11.0+, JDK 17+/26+ Compatible
+- **Engine**: PySpark 3.5.8 (Iceberg 3.5 Runtime 호환), PyIceberg 0.11.0+, JDK 17+/26+ Compatible
