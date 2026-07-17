@@ -14,6 +14,7 @@
 | 산출물 파일명 | 유형 | 핵심 기능 및 상세 설명 |
 | :--- | :--- | :--- |
 | **[`bq_iceberg_benchmark_50gb.ipynb`](./bq_iceberg_benchmark_50gb.ipynb)** | **Main Notebook** | 50GB+ 동적 가변 스케일 벤치마킹, 4대 테이블 구축, 무결성 검증, 시각화 및 Best Practice 종합 노트북 |
+| **[`bq_iceberg_bigquery_dml.ipynb`](./bq_iceberg_bigquery_dml.ipynb)** | **DML Test Notebook** | BigLake REST Catalog 기반 Apache Iceberg 테이블에 `'gcp.biglake.bigquery-dml.enabled' = 'true'` 옵션을 적용하여 BigQuery DML(INSERT, UPDATE, DELETE) 동작을 검증하는 독립 전용 노트북 |
 | **[`bq_iceberg_pyiceberg_duckdb.ipynb`](./bq_iceberg_pyiceberg_duckdb.ipynb)** | **DuckDB Query Notebook** | PyIceberg + DuckDB를 활용하여 BigLake REST Catalog Iceberg 테이블을 In-Memory Arrow로 스캔 및 ANSI SQL 조회하는 예제 노트북 |
 | **[`bq_iceberg_spark_sql.ipynb`](./bq_iceberg_spark_sql.ipynb)** | **Spark SQL Query Notebook** | PySpark & Spark SQL 엔진으로 BigLake REST Catalog Iceberg 테이블을 직접 접속 및 분산 SQL 조회하는 통합 가이드 노트북 |
 | **[`GEMINI.md`](./GEMINI.md)** | **Agent Directive** | 본 주피터 노트북 코드를 100% 자동 재현 및 생성할 수 있는 AI 에이전트 프롬프트 및 개발 지침서 |
@@ -51,6 +52,33 @@
 # =========================================================================
 TARGET_GB = 50  # 1GB (실증용 ~300만 건), 10GB (~3,000만 건), 50GB (대규모 ~1.5억 건)
 ```
+
+---
+
+## 🛠️ BigQuery DML 지원 Apache Iceberg 테이블 (`bq_iceberg_bigquery_dml.ipynb`)
+
+BigQuery 엔진에서 BigLake REST Catalog로 연동된 Apache Iceberg 테이블에 direct DML(INSERT, UPDATE, DELETE) 작업을 수행하기 위한 전용 테스트 노트북입니다:
+
+1. **PyIceberg `DayTransform()` 파티셔닝 변환 적용**:
+   ```python
+   partition_spec = PartitionSpec(
+       PartitionField(source_id=3, field_id=1000, transform=DayTransform(), name="event_date_day")
+   )
+   ```
+2. **BigQuery DML 활성화 Table Property 설정**:
+   ```python
+   iceberg_ext_tbl = pyiceberg_cat.create_table(
+       identifier="default.external_dml_weblog",
+       schema=schema,
+       partition_spec=partition_spec,
+       properties={
+           "write.sort.order": "user_id ASC NULLS FIRST, event_type ASC NULLS FIRST",
+           "gcp.biglake.bigquery-dml.enabled": "true"
+       }
+   )
+   ```
+3. **BigQuery SQL DML (INSERT, UPDATE, DELETE) 검증**:
+   - BigQuery DML 실행 시 `event_timestamp` 컬럼이 `DATETIME` 타입으로 인식되므로 `CURRENT_DATETIME()`을 사용하여 안전하게 INSERT 수행.
 
 ---
 
