@@ -14,6 +14,7 @@
 | 산출물 파일명 | 유형 | 핵심 기능 및 상세 설명 |
 | :--- | :--- | :--- |
 | **[`bq_iceberg_benchmark_50gb.ipynb`](./bq_iceberg_benchmark_50gb.ipynb)** | **Main Notebook** | 50GB+ 동적 가변 스케일 벤치마킹, 4대 테이블 구축, 무결성 검증, 시각화 및 Best Practice 종합 노트북 |
+| **[`bq_iceberg_pyiceberg_duckdb.ipynb`](./bq_iceberg_pyiceberg_duckdb.ipynb)** | **DuckDB Query Notebook** | PyIceberg + DuckDB를 활용하여 BigLake REST Catalog Iceberg 테이블을 In-Memory Arrow로 스캔 및 ANSI SQL 조회하는 예제 노트북 |
 | **[`GEMINI.md`](./GEMINI.md)** | **Agent Directive** | 본 주피터 노트북 코드를 100% 자동 재현 및 생성할 수 있는 AI 에이전트 프롬프트 및 개발 지침서 |
 | **[`benchmark_summary_visualization.png`](./benchmark_summary_visualization.png)** | **Visualization** | Bytes Processed, Elapsed Time, Slot Millis, Estimated Cost 4개 지표 고해상도(300 DPI) 자동 생성 차트 |
 | **[`pyproject.toml`](./pyproject.toml)** / **[`requirements.txt`](./requirements.txt)** | **Dependencies** | PySpark 4.2.0, PyIceberg 0.11.0+, BigQuery SDK 패키지 호환성 정의서 |
