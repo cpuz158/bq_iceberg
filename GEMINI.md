@@ -13,7 +13,7 @@
    - BigQuery Dataset Location: `asia-northeast3` (서울 리전)
    - BigQuery Dataset Name: `bq_iceberg_benchmark_ds`
    - Connection Name: `lakehouse-iceberg-conn`
-   - GCS Bucket Name: `{PROJECT_ID}-bq-iceberg-demo-bucket`
+   - GCS Bucket Name: `{PROJECT_ID}-bq-iceberg-demo-bucket` (기본), `{PROJECT_ID}-bq-iceberg-dml-bucket` (DML/Maintenance)
 2. **패키지 및 런타임 호환 규격**:
    - `pyspark>=3.5.0,<4.0.0` (Apache Iceberg Spark 3.5 Runtime 호환 버전 준수)
    - `pyiceberg[gcsfs]>=0.11.0` (GCS 오픈 메타데이터 엔진)
@@ -37,6 +37,9 @@
      ```
 3. **노트북 산출물 명세**:
    - 메인 대용량 가변 스케일 벤치마크 노트북: `bq_iceberg_benchmark_50gb.ipynb`
+   - BigQuery Direct DML 검증 노트북: `bq_iceberg_bigquery_dml.ipynb`
+   - Spark SQL 통합 쿼리 가이드 노트북: `bq_iceberg_spark_sql.ipynb`
+   - Spark SQL DML Maintenance 노트북: `bq_iceberg_spark_sql_dml.ipynb` (`rewrite_data_files`, `expire_snapshots` 실행 포함)
 
 ---
 
